@@ -1,0 +1,130 @@
+---
+title: "PROJECT_HOMELESS"
+output: html_document
+date: "2022-12-11"
+---
+
+```{r}
+library(readr)
+homlessness_data_2014_2017<-read_csv("Downloads/homlessness_data_2014_2017.csv")
+
+View(homlessness_data_2014_2017)
+```
+```{r}
+require(tidyverse)
+require(ggplot2)
+```
+```{r}
+glimpse(homlessness_data_2014_2017)
+```
+```{r}
+ggplot(homlessness_data_2014_2017 , mapping = aes(x=price , y= amount_funded, color=state)) +
+  facet_grid(.~ year)+
+  geom_point()+
+  labs(title= "Amount Funded VS Rent Price")+
+  theme(strip.text.x = element_text(size = 20))+
+  guides(color= FALSE, size= FALSE)
+```
+The above Graph is a representation the relationship between Amounted Funded and Rent Price for each year. As we see in the graph the is a slight increase in the amount fund every year. As the rent prices increase there is also an increase in the amount of funds that are provided to each state.
+
+```{r}
+proj_homeless=lm(total_homeless~state, data = homlessness_data_2014_2017)
+names(proj_homeless)
+```
+```{r}
+proj_homeless$coefficients
+```
+
+```{r}
+proj_homeless=lm(programs_funded~total_homeless, data = homlessness_data_2014_2017)
+summary(proj_homeless)
+```
+
+MODEL_1
+
+Below is the code for creating a preditive model based on relationship between Total_homeless and unemployment.
+The model also gives us an overview actual number and how far is our prediction from the actual number. This can be done using the Residual function. The dataset is first filtered for the perticular year in question and also removed the outliners.
+
+```{r}
+homelessness <- homlessness_data_2014_2017 %>%
+   filter(year==2015, total_homeless <= 75000 )%>%
+  select(name, total_homeless,unsheltered_homeless, unemployment, price, population)
+```
+Creating a preditive model :
+
+```{r}
+model_1 = lm(total_homeless ~ unemployment, homelessness)
+```
+```{r}
+homelessness$predicted <- predict(model_1)
+homelessness$residuals <- residuals(model_1)
+```
+
+```{r}
+ggplot(homelessness, aes(x= unemployment, y= total_homeless))+
+  geom_smooth(method="lm", se=FALSE)+
+  geom_segment(aes(xend= unemployment, yend= predicted), alpha=.3)+
+  geom_point(aes(color= abs(residuals), size= abs(residuals)))+
+  scale_color_continuous(low="green", high="red")+
+  theme_bw()+
+  plot(model_1) 
+ # the above function plot() helps us to view the data in different graphs
+```
+MODEL_2
+
+Below is the code for creating a preditive model_2 based on relationship between unsheltered_homeless and price.
+ The dataset is first filtered for the perticular year i.e. 2015 and also removed the outliners.
+ 
+```{r}
+homelessness <- homlessness_data_2014_2017 %>%
+   filter(year==2015, total_homeless <= 10000 )%>%
+  select(name, total_homeless,unsheltered_homeless, unemployment, price, population)
+```
+
+```{r}
+model_2 = lm(unsheltered_homeless ~ price, homelessness)
+```
+
+```{r}
+homelessness$predicted <- predict(model_2)
+homelessness$residuals <- residuals(model_2)
+```
+```{r}
+ggplot(homelessness, aes(x= price, y= unsheltered_homeless))+
+  geom_smooth(method="lm", se=FALSE)+
+  geom_segment(aes(xend= price, yend= predicted), alpha=.3)+
+  geom_point(aes(color= abs(residuals), size= abs(residuals)))+
+  scale_color_continuous(low="green", high="red")+
+  theme_bw()+
+  plot(model_2)
+```
+MODEL_3
+
+```{r}
+homelessness <- homlessness_data_2014_2017 %>%
+  
+  # the below filter is used to show prediction for the year 2015 and also remove the outliners.
+  
+  filter(year==2015, unemployment>= 2, homeless_people_in_families<=35000)%>% 
+  select(name, total_homeless,unsheltered_homeless, unemployment, price, population, homeless_people_in_families)
+```
+```{r}
+model_3 = lm(homeless_people_in_families~unemployment , homelessness)
+```
+```{r}
+homelessness$predicted <- predict(model_3)
+homelessness$residuals <- residuals(model_3)
+```
+```{r}
+ggplot(homelessness, aes(x= unemployment, y= homeless_people_in_families))+
+  geom_smooth(method="lm", se=FALSE)+
+  geom_segment(aes(xend= unemployment, yend= predicted), alpha=.3)+
+  geom_point(aes(color= abs(residuals), size= abs(residuals)))+
+  scale_color_continuous(low="green", high="red")+
+  theme_bw()+
+  plot(model_2)
+```
+
+
+ 
+
